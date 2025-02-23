@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 import json
 import sqlite3
 from datetime import datetime
+import time
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 def format_datetime(date):
     try:
@@ -110,10 +112,18 @@ class DatabaseSqlite:
         conn.close()
         return None
 
-if __name__ == '__main__':
+def schedule_task():
     db = DatabaseSqlite()
-    db.create_table()
     news = crawler('https://www.bbc.com/zhongwen/topics/c83plve5vmjt/trad')
     for new in news:
         db.insert(new)
     articles = db.fetch_all()
+    print (articles)
+
+if __name__ == '__main__':
+    db = DatabaseSqlite()
+    db.create_table()
+
+    scheduler = BlockingScheduler(timezone="Asia/Shanghai")
+    scheduler.add_job(schedule_task, 'cron', day_of_week='0-6', hour=18)
+    scheduler.start()
